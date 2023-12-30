@@ -1,5 +1,7 @@
 # BloodyBattle
 
+![634e7513028094cc4b1b90beec826c2da3c99f9e](https://github.com/NivixX/BloodyBattle/assets/5229597/5c0ef793-88d2-4e54-8814-8ef7a3bcc1aa)
+
 ## Work In Progress
 
 
