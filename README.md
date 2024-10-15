@@ -143,6 +143,71 @@ pinataStructure.enable();
 EpicAPI expose a concept called a `Structure`, and is composed by a list of `Component`, and a component can be a lot of thing such as Entity, a block (using flying armorstand), a hologram etc.
 You can assign interaction callback with the entire structure and EpicAPI will handle everything and send packets directly through netty thread behind the scene.
 
+
+-----
+
+#### NScoreboard
+
+**NScoreboard** is a plugin library designed to centralize scoreboard management across all other plugins in the server. It operates fully **asynchronously** and is particularly powerful due to its ability to handle **multiple contexts** for each player. Depending on the player's current activity—whether they're in an event, combat, or another situation—NScoreboard can dynamically display different **scoreboard layers** to reflect the appropriate information.
+
+![ezgif-7-886a11d92b](https://github.com/user-attachments/assets/5f34d7ec-687d-463b-a822-d5e6769a5eb7)
+
+
+![scoreboard-Page-1](https://github.com/user-attachments/assets/71c531b8-7398-48a1-8a6f-e40bb3b49c84)
+
+By default, the scoreboard displays key information such as the player's **money balance**, **quest progression**, and **battle pass progress**. This ensures that players always have access to their essential stats at a glance.
+
+In addition to this, there is a section of the scoreboard dedicated to **notifications**, which shows **volatile information**—details that are time-sensitive and won't persist for long. For example, players might see updates when a crafting process is nearly complete, or when a resource is ready to be gathered, and more.
+
+When a player enters combat, **NScoreboard** dynamically switches to a **combat layout**, which tracks how long the player has been in combat and displays valuable information like **cooldowns** and **remaining potion durations**.
+
+Finally, during server-wide events, an entirely new **event layout** appears on the scoreboard. This custom layout provides real-time, event-specific information to keep players informed of the current situation during the event.
+
+Everything is refreshed in **real time** and optimized for performance. Let’s now take a look at how the plugin’s architecture is designed.
+
+
+![scoreboard-Page-2](https://github.com/user-attachments/assets/743f0ab5-bbe3-4f18-9863-2fad624773aa)
+
+The architecture of **NScoreboard** is composed of several key components:
+
+1. **Scoreboard Registry**: This is where all the different lines are defined, along with how to supply the data and in what context. It also exposes an API (which we will explore later) that allows other plugins to register their own entries.
+
+2. **Scoreboard Context**: This manages the current context for each player, such as whether they have notifications, are in combat, or are in an event. Each entry has a priority system—if two events overlap, the system first attempts to combine the layouts. If there are too many lines, it displays only the layout with the highest priority.
+
+3. **LineSupplier**: This wraps the actual function template (`Function<Player, String>`) that determines how to display each line from the player's perspective. To optimize performance, it includes a caching mechanism that prevents unnecessary data fetching, especially for data that doesn't change frequently (like when data needs to be fetched from a database).
+
+Here is a **code example** of how to display the number of remaining potions the player has when in combat context:
+
+```java
+LineProvider.newBuilder(NScoreBoard.instance)
+	.order(1100) // Correspond to line related to combat (only show when in combat)
+	.line(player -> {
+	    // Fetch the number of health potion of the player
+	    long potionCount = Arrays.stream(player.getInventory().getContents())
+			    .filter(itemStack -> itemStack != null &&
+				    itemStack.getType() == Material.POTION &&
+				    itemStack.getDurability() == 16421)
+			    .count();
+	    if(potionCount == 0) {
+		// If no potions, return null, and the line won't be displayed
+		return null;
+	    }
+	    return "Potions: " + potionCount;
+	})
+	.autoUpdate(5) // Update this info every 5 ticks
+	.build()
+	.enable(); // Submit to the registry
+```
+
+
+-----
+
+#### BloodyMeteorite
+
+![ezgif-7-834376eceb](https://github.com/user-attachments/assets/258de2b3-ad16-470f-b1f0-447a0d730f14)
+
+
+
 ### -- THIS REPOSITORY IS STILL UNDER CONSTRUCTION
 I'll share everything here when I have time.
 Keep updated and give a star ☆ if you learned something interesting.
